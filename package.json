@@ -1,0 +1,13 @@
+{
+  "name": "minecrawl-global",
+  "version": "1.0.0",
+  "description": "MineCrawl Daily Challenge Web Application",
+  "main": "game.js",
+  "scripts": {
+    "build": "mkdir -p dist && cp -r index.html game.js logo.png hangwall-logo.svg _headers netlify dist/ 2>/dev/null || true"
+  },
+  "dependencies": {
+    "@netlify/functions": "^2.6.0",
+    "nodemailer": "^6.9.13"
+  }
+}

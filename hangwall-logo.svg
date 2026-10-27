@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="100%" height="100%">
+  <!-- Squircle App Icon Background -->
+  <rect width="1024" height="1024" rx="224" fill="#1F1A16"/>
+
+  <!-- Row 1: Top Tier (5 Bronze/Taupe Extraction Blocks) -->
+  <rect x="145" y="299" width="118" height="118" rx="24" fill="#8A7B6B"/>
+  <rect x="299" y="299" width="118" height="118" rx="24" fill="#8A7B6B"/>
+  <rect x="453" y="299" width="118" height="118" rx="24" fill="#8A7B6B"/>
+  <rect x="607" y="299" width="118" height="118" rx="24" fill="#8A7B6B"/>
+  <rect x="761" y="299" width="118" height="118" rx="24" fill="#8A7B6B"/>
+
+  <!-- Row 2: Middle Tier (3 Sand/Silver Core Blocks) -->
+  <rect x="299" y="453" width="118" height="118" rx="24" fill="#CFC4B6"/>
+  <rect x="453" y="453" width="118" height="118" rx="24" fill="#CFC4B6"/>
+  <rect x="607" y="453" width="118" height="118" rx="24" fill="#CFC4B6"/>
+
+  <!-- Row 3: Bottom Drawpoint (1 Vibrant Copper/Orange Extraction Point) -->
+  <rect x="453" y="607" width="118" height="118" rx="24" fill="#D9642B"/>
+</svg>

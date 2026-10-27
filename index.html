@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MineCrawl - Global Challenge</title>
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Share+Tech+Mono&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #020617;
+            --surface-color: rgba(15, 23, 42, 0.45);
+            --surface-border: rgba(255, 255, 255, 0.08);
+            --accent-color: #fbbf24;
+            --accent-glow: rgba(251, 191, 36, 0.3);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --danger: #f87171;
+            --success: #34d399;
+            --gold-grad: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            padding: 20px 10px;
+            background: radial-gradient(circle at center, #0f172a 0%, #020617 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        /* Ambient floating backdrop orbs */
+        .bg-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(100px);
+            z-index: -1;
+            opacity: 0.12;
+            animation: float-orb 25s infinite alternate ease-in-out;
+            pointer-events: none;
+        }
+
+        .orb-1 {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, var(--accent-color) 0%, rgba(251, 191, 36, 0) 70%);
+            top: -10%;
+            left: -10%;
+        }
+
+        .orb-2 {
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, #3b82f6 0%, rgba(59, 130, 246, 0) 70%);
+            bottom: -15%;
+            right: -10%;
+            animation-duration: 30s;
+            animation-delay: -5s;
+        }
+
+        .orb-3 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, #10b981 0%, rgba(16, 185, 129, 0) 70%);
+            top: 40%;
+            left: 45%;
+            animation-duration: 35s;
+            animation-delay: -10s;
+        }
+
+        @keyframes float-orb {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            50% {
+                transform: translate(60px, -60px) scale(1.1);
+            }
+
+            100% {
+                transform: translate(-40px, 40px) scale(0.9);
+            }
+        }
+
+        /* Glassmorphism panel system */
+        .glass-panel {
+            background: var(--surface-color);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--surface-border);
+            border-radius: 20px;
+            box-shadow: 0 15px 45px -10px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .glass-panel:hover {
+            border-color: rgba(251, 191, 36, 0.15);
+            box-shadow: 0 20px 50px -5px rgba(0, 0, 0, 0.7), inset 0 1px 1px rgba(255, 255, 255, 0.08);
+        }
+
+        .logo-img {
+            width: 140px;
+            height: 140px;
+            margin-bottom: 5px;
+            filter: drop-shadow(0 0 20px var(--accent-glow));
+            animation: float 5s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0px) rotate(0deg);
+            }
+
+            50% {
+                transform: translateY(-12px) rotate(2deg);
+            }
+
+            100% {
+                transform: translateY(0px) rotate(0deg);
+            }
+        }
+
+        .title {
+            font-size: 54px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ffe082 0%, #fbbf24 50%, #f59e0b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 25px;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+        }
+
+        .screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            width: 100%;
+            max-width: 1200px;
+            animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .active-screen {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .instructions {
+            font-size: 16px;
+            color: #cbd5e1;
+            text-align: left;
+            margin: 0 auto;
+            width: 100%;
+            padding: 35px;
+            line-height: 1.65;
+            position: relative;
+        }
+
+        .instructions p strong {
+            color: var(--text-primary);
+            font-weight: 800;
+        }
+
+        .instructions ul {
+            padding-left: 24px;
+            margin: 15px 0;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+        }
+
+        .highlight-text {
+            color: var(--accent-color);
+            font-weight: 600;
+            border-left: 3px solid var(--accent-color);
+            padding-left: 12px;
+            margin: 15px 0;
+        }
+
+        /* Constraint illustration styling */
+        .constraint-illustration {
+            display: grid;
+            grid-template-columns: repeat(5, 52px);
+            gap: 12px;
+            margin: 30px auto;
+            justify-content: center;
+            background: rgba(2, 6, 23, 0.5);
+            padding: 24px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            width: fit-content;
+        }
+
+        .block {
+            width: 52px;
+            height: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: Arial, sans-serif;
+            font-size: 15px;
+            font-weight: bold;
+            color: black;
+            border: 1.5px solid black;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        .mined {
+            background-color: transparent;
+            border: 1.5px dashed rgba(255, 255, 255, 0.25);
+        }
+
+        .block-waste {
+            background-color: skyblue;
+        }
+
+        .block-gold {
+            /* dynamic background colors handled inline in HTML to mimic the in-game gradients */
+        }
+
+        .badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 800;
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 5;
+        }
+
+        .badge-tick {
+            background-color: #10b981;
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+        }
+
+        .badge-x {
+            background-color: #ef4444;
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+        }
+
+        /* Form Controls */
+        .input-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            justify-content: center;
+            margin: 25px 0;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+
+        .input-field {
+            font-family: 'Outfit', sans-serif;
+            font-size: 18px;
+            padding: 16px 24px;
+            border-radius: 12px;
+            border: 1px solid var(--surface-border);
+            background: rgba(2, 6, 23, 0.7);
+            color: white;
+            outline: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 280px;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+
+        .input-field:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 25px rgba(251, 191, 36, 0.25);
+            background: rgba(2, 6, 23, 0.95);
+        }
+
+        .input-field::placeholder {
+            color: #64748b;
+        }
+
+        .btn {
+            font-family: 'Outfit', sans-serif;
+            font-size: 18px;
+            font-weight: 800;
+            padding: 16px 36px;
+            cursor: pointer;
+            background: var(--gold-grad);
+            color: #020617;
+            border: none;
+            border-radius: 12px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            box-shadow: 0 8px 25px rgba(245, 158, 11, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: 0.5s;
+        }
+
+        .btn:hover::after {
+            left: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(245, 158, 11, 0.5);
+            filter: brightness(1.1);
+        }
+
+        .btn:active {
+            transform: translateY(-1px);
+        }
+
+        /* Leaderboard Sort Controls */
+        .leaderboard-sort-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .sort-btn {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 8px 16px;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-secondary);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            transition: all 0.2s ease-in-out;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            outline: none;
+        }
+
+        .sort-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .sort-btn.active {
+            background: var(--gold-grad);
+            color: #020617;
+            border-color: transparent;
+            box-shadow: 0 4px 15px rgba(251, 191, 36, 0.35);
+        }
+
+        /* Leaderboard Tooltip Styling */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+            margin-left: 5px;
+            vertical-align: middle;
+            color: var(--text-secondary);
+            transition: color 0.2s ease;
+        }
+
+        .tooltip:hover {
+            color: var(--accent-color);
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 280px;
+            background-color: #0b1329;
+            color: #f8fafc;
+            text-align: left;
+            border: 1px solid rgba(251, 191, 36, 0.3);
+            border-radius: 8px;
+            padding: 14px;
+            position: absolute;
+            z-index: 1000;
+            bottom: 135%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+            font-family: 'Outfit', sans-serif;
+            font-size: 12px;
+            font-weight: normal;
+            line-height: 1.5;
+            text-transform: none;
+            letter-spacing: 0;
+            pointer-events: none;
+        }
+
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -6px;
+            border-width: 6px;
+            border-style: solid;
+            border-color: #0b1329 transparent transparent transparent;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+            transform: translate(-50%, -5px);
+        }
+
+        /* Game Screen specific */
+        #gameScreen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            margin-top: 40px;
+        }
+
+        #gameScreen.active-screen {
+            display: flex;
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 900px;
+            margin-bottom: 25px;
+            padding: 20px 35px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(15, 23, 42, 0.6);
+        }
+
+        .stat-box {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--accent-color);
+            font-family: 'Outfit', sans-serif;
+            text-shadow: 0 0 10px rgba(251, 191, 36, 0.2);
+        }
+
+        /* score and timer style inherits Outfit font */
+
+        #timer {
+            color: var(--text-primary);
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.25);
+        }
+
+        .canvas-container {
+            position: relative;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 1px 1px rgba(255, 255, 255, 0.1);
+            background: #0f172a;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            width: 900px;
+            height: 300px;
+        }
+
+        canvas {
+            display: block;
+            background-color: transparent;
+            cursor: default;
+        }
+
+        /* Leaderboard Styling */
+        .leaderboard-container {
+            width: 100%;
+            max-width: 600px;
+            padding: 35px;
+            margin-bottom: 25px;
+            position: relative;
+            overflow: visible;
+        }
+
+        .leaderboard-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+            margin-top: 10px;
+        }
+
+        th {
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 1.5px;
+            padding: 8px 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        td {
+            padding: 12px 10px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.02);
+            transition: all 0.2s ease;
+        }
+
+        tr td:first-child {
+            border-radius: 10px 0 0 10px;
+            border-left: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        tr td:last-child {
+            border-radius: 0 10px 10px 0;
+            border-right: 1px solid rgba(255, 255, 255, 0.03);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.06);
+            transform: scaleY(1.02);
+        }
+
+        /* Rank Badges */
+        .rank-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            font-weight: 800;
+            font-size: 14px;
+        }
+
+        .rank-1 {
+            background: linear-gradient(135deg, #ffe082 0%, #fbbf24 100%);
+            color: #020617;
+            box-shadow: 0 0 12px rgba(251, 191, 36, 0.6);
+        }
+
+        .rank-2 {
+            background: linear-gradient(135deg, #e2e8f0 0%, #94a3b8 100%);
+            color: #020617;
+            box-shadow: 0 0 12px rgba(148, 163, 184, 0.4);
+        }
+
+        .rank-3 {
+            background: linear-gradient(135deg, #f59e0b 0%, #b45309 100%);
+            color: #f8fafc;
+            box-shadow: 0 0 12px rgba(180, 83, 9, 0.5);
+        }
+
+        .rank-other {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-secondary);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* Compressed Table style overrides */
+        .compressed-table td {
+            padding: 8px 10px !important;
+            font-size: 14px !important;
+        }
+
+        .compressed-table tr td:last-child {
+            font-size: 16px !important;
+        }
+
+        .compressed-table .rank-badge {
+            width: 24px !important;
+            height: 24px !important;
+            font-size: 12px !important;
+        }
+
+        td:nth-child(2) {
+            text-align: left;
+            padding-left: 20px;
+            font-weight: 600;
+        }
+
+        #loadingLeaderboard,
+        #loadingLeaderboardEnd {
+            padding: 40px;
+            color: var(--accent-color);
+            font-weight: 600;
+            animation: pulse 1.5s infinite;
+            letter-spacing: 1px;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 0.5;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0.5;
+            }
+        }
+
+        /* Time indicators and dashboard enhancements */
+        .hud-divider {
+            height: 30px;
+            width: 1px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Modal Backdrop */
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(2, 6, 23, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Modal Content */
+        .modal-content {
+            width: 90%;
+            max-width: 500px;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            border-color: rgba(251, 191, 36, 0.3);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 1px 1px rgba(255, 255, 255, 0.1);
+            animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Toast notification styling */
+        .toast-notification {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(16, 185, 129, 0.9);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
+            z-index: 1100;
+            opacity: 0;
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .toast-notification.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Background shifting orbs -->
+    <div class="bg-orb orb-1"></div>
+    <div class="bg-orb orb-2"></div>
+    <div class="bg-orb orb-3"></div>
+
+    <!-- Name Entry Screen -->
+    <div id="nameScreen" class="screen active-screen">
+        <img src="logo.png" alt="MineCrawl Logo" class="logo-img">
+        <div class="title">MineCrawl</div>
+
+        <div
+            style="display: flex; flex-direction: row; gap: 40px; width: 100%; align-items: flex-start; justify-content: center; flex-wrap: wrap;">
+
+            <!-- Left Column: Instructions and Input -->
+            <div
+                style="flex: 1.2; min-width: 400px; max-width: 650px; display: flex; flex-direction: column; align-items: center;">
+                <div class="instructions glass-panel" style="margin-bottom: 25px;">
+                    <p style="font-size: 18px; margin-bottom: 10px;"><strong style="color: var(--accent-color);">Welcome
+                            to the Daily MineCrawl Challenge!</strong></p>
+                    <p>Every day a new mineral deposit is discovered. All operators are given this
+                        deposit to mine. Can you top today's leaderboard?</p>
+
+                    <br>
+                    <p><strong>How to Operate:</strong></p>
+                    <ul>
+                        <li>Click on grid blocks to mine and excavate them.</li>
+                        <li>Avoid mining unnecessary <strong>waste blocks</strong> (blue blocks with negative values).
+                        </li>
+                        <li>You earn profit when you mine high-grade <strong>gold blocks</strong> (gold-yellow blocks).
+                        </li>
+                        <li><strong style="color: var(--accent-color);">Time is money:</strong> block values
+                            are continuously discounted at 1% per second! Excavate high-grade blocks as early as
+                            possible.</li>
+                        <li><strong>Note:</strong> Clicks for mining blocks are limited to a maximum of 3 clicks per
+                            second.</li>
+                    </ul>
+
+                    <p class="highlight-text">No underground mining allowed.</p>
+                    <p>Open-pit rules apply: To excavate a block, the block directly above it and both diagonal blocks
+                        above (left and right) must be completely mined first.</p>
+
+                    <div class="constraint-illustration">
+                        <!-- Row 1 -->
+                        <div class="block block-waste">-8</div>
+                        <div class="block mined"></div>
+                        <div class="block mined"></div>
+                        <div class="block mined"></div>
+                        <div class="block block-gold" style="background-color: rgb(255, 193, 20);">40</div>
+                        <!-- Row 2 -->
+                        <div class="block block-gold" style="background-color: rgb(255, 139, 37);">65</div>
+                        <div class="block block-gold" style="background-color: rgb(255, 232, 7);">
+                            15
+                            <span class="badge badge-x">✗</span>
+                        </div>
+                        <div class="block block-gold" style="background-color: rgb(255, 139, 37);">
+                            75
+                            <span class="badge badge-tick">✓</span>
+                        </div>
+                        <div class="block block-waste">
+                            -12
+                            <span class="badge badge-x">✗</span>
+                        </div>
+                        <div class="block block-gold" style="background-color: rgb(255, 232, 7);">20</div>
+                        <!-- Row 3 -->
+                        <div class="block block-waste">-15</div>
+                        <div class="block block-gold" style="background-color: rgb(255, 193, 20);">50</div>
+                        <div class="block block-gold" style="background-color: rgb(255, 100, 50);">180</div>
+                        <div class="block block-waste">-5</div>
+                        <div class="block block-gold" style="background-color: rgb(255, 193, 20);">30</div>
+                    </div>
+                    <p style="text-align: center; font-size: 13px; color: var(--text-secondary);">
+                        Blocks with a check (✓) can be mined because the three blocks above them have been mined
+                        out.<br>
+                        You have <strong>90 seconds</strong> to maximize value. Good luck, Operator.
+                    </p>
+                </div>
+
+                <div class="input-group">
+                    <input type="text" id="playerNameInput" class="input-field" placeholder="Enter operator alias..."
+                        maxlength="12">
+                    <button id="startGameBtn" class="btn">Start Operations</button>
+                </div>
+            </div>
+
+            <!-- Right Column: Leaderboard -->
+            <div
+                style="flex: 1; min-width: 350px; max-width: 480px; display: flex; flex-direction: column; align-items: center; gap: 20px;">
+
+                <!-- Today's Leaderboard (Compressed) -->
+                <div class="leaderboard-container glass-panel"
+                    style="box-sizing: border-box; width: 100%; padding: 22px 26px; margin-bottom: 0;">
+                    <div class="leaderboard-header-row"
+                        style="padding-bottom: 10px; margin-bottom: 10px; justify-content: center;">
+                        <div class="title"
+                            style="font-size: 17px; margin: 0; letter-spacing: 1.5px; text-align: center;">TOP OPERATORS
+                            TODAY</div>
+                    </div>
+                    <div class="leaderboard-sort-controls">
+                        <button class="sort-btn active" data-metric="score">Sort by Value</button>
+                        <button class="sort-btn" data-metric="irr">Sort by IRR</button>
+                    </div>
+                    <div id="loadingLeaderboard" style="padding: 20px; font-size: 14px;">Decrypting standings...</div>
+                    <table id="leaderboardTable" class="compressed-table" style="display: none;">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px; font-size: 11px;">Rank</th>
+                                <th style="text-align: left; padding-left: 15px; font-size: 11px;">Operator</th>
+                                <th style="text-align: center; width: 70px; font-size: 11px;">Blocks</th>
+                                <th style="text-align: center; width: 80px; font-size: 11px;"><span
+                                        style="position: relative; display: inline-block;">IRR<span class="tooltip"
+                                            style="display: inline-flex; align-items: center; justify-content: center; width: 10px; height: 10px; border: 1px solid currentColor; border-radius: 50%; font-size: 7px; font-weight: bold; font-family: monospace; cursor: help; position: absolute; margin-left: 3px; top: -2px; text-transform: none;">i<span
+                                                class="tooltiptext"><strong>IRR calculation basis:</strong><br><br>•
+                                                <strong>Capex (t=0):</strong> -$200
+                                                for &lt;120 clicks, scaling linearly to -$400 at 240 clicks.<br>•
+                                                <strong>Timeline:</strong> 15 annual periods (6s play = 1 year).<br>•
+                                                <strong>Cash Flows:</strong> Mined values grouped into each 6s
+                                                period.<br>• <strong>Formula:</strong> Solving rate where Net Present
+                                                Value (NPV) = 0.</span></span></span></th>
+                                <th style="text-align: center; width: 90px; font-size: 11px;">Value</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboardBody">
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Yesterday's Leaderboard (Compressed) -->
+                <div class="leaderboard-container glass-panel"
+                    style="box-sizing: border-box; width: 100%; padding: 22px 26px; margin-bottom: 0;">
+                    <div class="leaderboard-header-row"
+                        style="padding-bottom: 10px; margin-bottom: 10px; justify-content: center;">
+                        <div class="title"
+                            style="font-size: 17px; margin: 0; letter-spacing: 1.5px; text-align: center; background: linear-gradient(135deg, #a5b4fc 0%, #3b82f6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                            TOP OPERATORS YESTERDAY</div>
+                    </div>
+                    <div class="leaderboard-sort-controls">
+                        <button class="sort-btn active" data-metric="score">Sort by Value</button>
+                        <button class="sort-btn" data-metric="irr">Sort by IRR</button>
+                    </div>
+                    <div id="loadingLeaderboardYesterday"
+                        style="padding: 20px; font-size: 14px; color: var(--accent-color); font-family: 'Share Tech Mono', monospace; text-align: center; animation: pulse 1.5s infinite;">
+                        Decrypting standings...</div>
+                    <table id="leaderboardTableYesterday" class="compressed-table" style="display: none;">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px; font-size: 11px;">Rank</th>
+                                <th style="text-align: left; padding-left: 15px; font-size: 11px;">Operator</th>
+                                <th style="text-align: center; width: 70px; font-size: 11px;">Blocks</th>
+                                <th style="text-align: center; width: 80px; font-size: 11px;"><span
+                                        style="position: relative; display: inline-block;">IRR<span class="tooltip"
+                                            style="display: inline-flex; align-items: center; justify-content: center; width: 10px; height: 10px; border: 1px solid currentColor; border-radius: 50%; font-size: 7px; font-weight: bold; font-family: monospace; cursor: help; position: absolute; margin-left: 3px; top: -2px; text-transform: none;">i<span
+                                                class="tooltiptext"><strong>IRR calculation basis:</strong><br><br>•
+                                                <strong>Capex (t=0):</strong> -$200
+                                                for &lt;120 clicks, scaling linearly to -$400 at 240 clicks.<br>•
+                                                <strong>Timeline:</strong> 15 annual periods (6s play = 1 year).<br>•
+                                                <strong>Cash Flows:</strong> Mined values grouped into each 6s
+                                                period.<br>• <strong>Formula:</strong> Solving rate where Net Present
+                                                Value (NPV) = 0.</span></span></span></th>
+                                <th style="text-align: center; width: 90px; font-size: 11px;">Value</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboardBodyYesterday">
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Daily Email Reminders Panel -->
+                <div id="reminderContainer" class="leaderboard-container glass-panel"
+                    style="box-sizing: border-box; width: 100%; padding: 22px 26px; margin-top: 15px; display: flex; flex-direction: column; align-items: center; gap: 10px;">
+                    <div
+                        style="font-family: 'Share Tech Mono', monospace; font-size: 15px; color: var(--accent-color); text-transform: uppercase; letter-spacing: 1.5px; text-align: center; font-weight: bold;">
+                        Daily Reminder
+                    </div>
+                    <p
+                        style="font-size: 12px; color: var(--text-secondary); text-align: center; line-height: 1.4; margin: 2px 0 6px 0;">
+                        Get an email reminder tomorrow.
+                    </p>
+                    <div
+                        style="display: flex; gap: 8px; width: 100%; align-items: center; justify-content: center; flex-wrap: wrap;">
+                        <input type="email" id="reminderEmailInput" class="input-field"
+                            placeholder="Enter email address..."
+                            style="width: 100%; max-width: 240px; padding: 10px 14px; font-size: 14px; border-radius: 8px; text-align: left; margin: 0;">
+                        <button id="submitReminderBtn" class="btn"
+                            style="padding: 10px 20px; font-size: 14px; border-radius: 8px; text-transform: uppercase; letter-spacing: 1px; box-shadow: none; margin: 0;">
+                            Notify Me
+                        </button>
+                    </div>
+                    <div id="reminderMessage"
+                        style="font-size: 12px; text-align: center; display: none; font-family: 'Share Tech Mono', monospace;">
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="gameScreen">
+        <img src="logo.png" alt="MineCrawl"
+            style="width: 50px; position: absolute; top: 20px; left: 30px; filter: drop-shadow(0 0 10px rgba(251,191,36,0.4));">
+
+        <div class="game-header glass-panel">
+            <div class="stat-box">
+                <span class="stat-label">Active Operator</span>
+                <span class="stat-value" id="playerDisplay" style="color: var(--text-primary); font-size: 22px;"></span>
+            </div>
+            <div class="hud-divider"></div>
+            <div class="stat-box" style="align-items: center;">
+                <span class="stat-label">Time Remaining</span>
+                <span class="stat-value" id="timer">90.0s</span>
+            </div>
+            <div class="hud-divider"></div>
+            <div class="stat-box" style="align-items: flex-end;">
+                <span class="stat-label">Excavation Value</span>
+                <span class="stat-value" id="score">$0.00</span>
+            </div>
+        </div>
+
+        <div class="canvas-container">
+            <canvas id="gameCanvas" width="900" height="300"></canvas>
+        </div>
+        <div id="aiControls"
+            style="display: none; flex-direction: column; align-items: center; margin-top: 20px; gap: 10px;">
+            <div style="display: flex; gap: 15px; justify-content: center; align-items: center; flex-wrap: wrap;">
+                <span
+                    style="font-family: 'Share Tech Mono', monospace; font-size: 16px; color: #a5b4fc; animation: pulse 1.5s infinite; letter-spacing: 1px;">
+                    🤖 AI Simulation in progress (beam search solver)...
+                </span>
+                <button id="abortAiBtn" class="btn"
+                    style="padding: 10px 20px; font-size: 14px; background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); box-shadow: none; text-transform: none; letter-spacing: 1px;">
+                    Abort Simulation
+                </button>
+            </div>
+            <div
+                style="font-size: 12px; color: var(--text-secondary); opacity: 0.85; font-family: 'Share Tech Mono', monospace; letter-spacing: 0.5px; margin-top: 2px;">
+                Note: AI has been limited to 160 clicks to simulate human clicking potential
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Leaderboard Screen (End Game) -->
+    <div id="leaderboardScreen" class="screen">
+        <img src="logo.png" alt="MineCrawl Logo" class="logo-img" style="width: 100px; height: 100px;">
+        <div class="title" style="font-size: 42px; margin-bottom: 5px;">Operations Completed</div>
+        <div class="title"
+            style="font-size: 20px; color: var(--text-secondary); margin-bottom: 30px; letter-spacing: 1px;">Daily
+            Leaderboard</div>
+
+        <!-- Player Performance Stats -->
+        <div id="playerStatsEnd" class="glass-panel"
+            style="display: flex; flex-direction: column; gap: 15px; justify-content: center; align-items: center; padding: 25px 40px; margin-bottom: 25px; max-width: 600px; width: 100%;">
+            <div
+                style="display: flex; gap: 30px; justify-content: center; align-items: center; width: 100%; flex-wrap: wrap;">
+                <div class="stat-box" style="align-items: center;">
+                    <span class="stat-label">Your Mined Value</span>
+                    <span id="playerScoreEnd" class="stat-value" style="font-size: 26px;">$0.00</span>
+                </div>
+                <div class="hud-divider"></div>
+                <div class="stat-box" style="align-items: center;">
+                    <span class="stat-label">Blocks Excavated</span>
+                    <span id="playerBlocksEnd" class="stat-value"
+                        style="font-size: 26px; color: var(--text-primary); text-shadow: 0 0 10px rgba(255, 255, 255, 0.25);">0</span>
+                </div>
+                <div class="hud-divider"></div>
+                <div class="stat-box" style="align-items: center;">
+                    <span class="stat-label">Project IRR</span>
+                    <span id="playerIrrEnd" class="stat-value"
+                        style="font-size: 26px; color: var(--accent-color);">0.0%</span>
+                </div>
+            </div>
+            <div id="playerPercentileContainer"
+                style="display: none; width: 100%; border-top: 1px solid rgba(255, 255, 255, 0.06); padding-top: 12px; margin-top: 5px; text-align: center;">
+                <span id="playerPercentileText"
+                    style="font-size: 14px; color: var(--text-secondary); font-family: 'Share Tech Mono', monospace; letter-spacing: 1px;">
+                    You scored more than <strong
+                        style="color: var(--accent-color); font-weight: bold; font-size: 16px;"><span
+                            id="playerPercentileValue">0</span>%</strong> of the operators today.
+                </span>
+            </div>
+        </div>
+
+        <div class="leaderboard-container glass-panel" style="max-width: 600px; padding: 22px 26px; margin-bottom: 20px;">
+            <div class="leaderboard-sort-controls">
+                <button class="sort-btn active" data-metric="score">Sort by Value</button>
+                <button class="sort-btn" data-metric="irr">Sort by IRR</button>
+            </div>
+            <div id="loadingLeaderboardEnd">Loading final standings...</div>
+            <table id="leaderboardTableEnd" style="display: none;">
+                <thead>
+                    <tr>
+                        <th style="width: 70px;">Rank</th>
+                        <th style="text-align: left; padding-left: 20px;">Operator</th>
+                        <th style="text-align: center; width: 100px;">Blocks</th>
+                        <th style="text-align: center; width: 100px;"><span
+                                style="position: relative; display: inline-block;">IRR<span class="tooltip"
+                                    style="display: inline-flex; align-items: center; justify-content: center; width: 10px; height: 10px; border: 1px solid currentColor; border-radius: 50%; font-size: 7px; font-weight: bold; font-family: monospace; cursor: help; position: absolute; margin-left: 3px; top: -2px; text-transform: none;">i<span
+                                        class="tooltiptext"><strong>IRR calculation basis:</strong><br><br>•
+                                        <strong>Capex (t=0):</strong> -$200 for &lt;120 clicks,
+                                        scaling linearly to -$400 at 240 clicks.<br>• <strong>Timeline:</strong> 15
+                                        annual periods (6s play = 1 year).<br>• <strong>Cash Flows:</strong> Mined
+                                        values grouped into each 6s period.<br>• <strong>Formula:</strong> Solving rate
+                                        where Net Present Value (NPV) = 0.</span></span></span></th>
+                        <th style="text-align: center; width: 120px;">Value Mined</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboardBodyEnd">
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Hangwall App Banner Link -->
+        <a id="hangwallBannerLink" href="https://hangwall.onrender.com" target="_blank" rel="noopener noreferrer" class="glass-panel"
+            style="display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; max-width: 600px; padding: 16px 22px; text-decoration: none; margin-bottom: 20px; box-sizing: border-box; border: 1px solid rgba(251, 191, 36, 0.25); background: linear-gradient(135deg, rgba(31, 26, 22, 0.7) 0%, rgba(15, 23, 42, 0.7) 100%); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer;"
+            onmouseover="this.style.borderColor='var(--accent-color)'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 12px 35px rgba(251, 191, 36, 0.2)';"
+            onmouseout="this.style.borderColor='rgba(251, 191, 36, 0.25)'; this.style.transform='translateY(0)'; this.style.boxShadow='0 15px 45px -10px rgba(0, 0, 0, 0.6)';">
+            <div style="display: flex; align-items: center; gap: 14px;">
+                <img src="hangwall-logo.svg" alt="Hangwall Logo" style="width: 44px; height: 44px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); flex-shrink: 0;">
+                <div style="display: flex; flex-direction: column; align-items: flex-start; text-align: left;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 16px; font-weight: 800; color: #f8fafc; letter-spacing: 0.5px;">Hangwall</span>
+                        <span style="background: rgba(251, 191, 36, 0.15); color: var(--accent-color); font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; border: 1px solid rgba(251, 191, 36, 0.3); text-transform: uppercase; letter-spacing: 1px;">App</span>
+                    </div>
+                    <span style="font-size: 13px; color: var(--text-secondary); line-height: 1.35; margin-top: 2px;">
+                        Stay up to date with the latest mining news releases on our new app
+                    </span>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px; color: var(--accent-color); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; flex-shrink: 0;">
+                <span>Check it out</span>
+                <span style="font-size: 16px;">&rarr;</span>
+            </div>
+        </a>
+
+        <div style="display: flex; gap: 15px; margin-top: 5px; flex-wrap: wrap; justify-content: center;">
+            <button id="playAgainBtn" class="btn"
+                style="background: rgba(255, 255, 255, 0.08); color: white; box-shadow: none; border: 1px solid var(--surface-border);">Try
+                Again
+            </button>
+            <button id="watchAiBtn" class="btn"
+                style="background: linear-gradient(135deg, #a5b4fc 0%, #6366f1 100%); color: white; box-shadow: 0 8px 25px rgba(99, 102, 241, 0.35);">Watch
+                AI Solve</button>
+            <button id="shareBtn" class="btn"
+                style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; box-shadow: 0 8px 25px rgba(16, 185, 129, 0.35);">Share
+                Results</button>
+        </div>
+
+        <!-- Daily Email Reminders Panel (End Screen) -->
+        <div id="reminderContainerEnd" class="leaderboard-container glass-panel"
+            style="box-sizing: border-box; width: 100%; max-width: 600px; padding: 22px 26px; margin-top: 25px; display: flex; flex-direction: column; align-items: center; gap: 10px;">
+            <div
+                style="font-family: 'Share Tech Mono', monospace; font-size: 15px; color: var(--accent-color); text-transform: uppercase; letter-spacing: 1.5px; text-align: center; font-weight: bold;">
+                Daily Reminder
+            </div>
+            <p
+                style="font-size: 12px; color: var(--text-secondary); text-align: center; line-height: 1.4; margin: 2px 0 6px 0;">
+                Get an email reminder tomorrow.
+            </p>
+            <div
+                style="display: flex; gap: 8px; width: 100%; align-items: center; justify-content: center; flex-wrap: wrap;">
+                <input type="email" id="reminderEmailInputEnd" class="input-field" placeholder="Enter email address..."
+                    style="width: 100%; max-width: 240px; padding: 10px 14px; font-size: 14px; border-radius: 8px; text-align: left; margin: 0;">
+                <button id="submitReminderBtnEnd" class="btn"
+                    style="padding: 10px 20px; font-size: 14px; border-radius: 8px; text-transform: uppercase; letter-spacing: 1px; box-shadow: none; margin: 0;">
+                    Notify Me
+                </button>
+            </div>
+            <div id="reminderMessageEnd"
+                style="font-size: 12px; text-align: center; display: none; font-family: 'Share Tech Mono', monospace;">
+            </div>
+        </div>
+    </div>
+
+    <!-- Share Modal -->
+    <div id="shareModal" class="modal-backdrop" style="display: none;">
+        <div class="modal-content glass-panel">
+            <h3
+                style="font-size: 24px; font-weight: 800; color: var(--accent-color); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 2px;">
+                Share Operations Report</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 20px; font-size: 15px; line-height: 1.5;">Share your
+                achievements and challenge other operators!</p>
+            <textarea id="shareText" class="input-field" readonly
+                style="width: 100%; height: 130px; resize: none; text-align: left; font-family: 'Share Tech Mono', monospace; font-size: 15px; margin-bottom: 24px; padding: 16px; box-sizing: border-box; line-height: 1.6; border: 1px solid rgba(251, 191, 36, 0.2);"></textarea>
+            <div style="display: flex; gap: 15px; justify-content: center; width: 100%; flex-wrap: wrap;">
+                <button id="copyShareBtn" class="btn"
+                    style="font-size: 15px; padding: 12px 24px; background: var(--gold-grad); color: #020617;">Copy to
+                    Clipboard</button>
+                <button id="closeShareBtn" class="btn"
+                    style="font-size: 15px; padding: 12px 24px; background: rgba(255, 255, 255, 0.08); color: white; box-shadow: none; border: 1px solid rgba(255, 255, 255, 0.1);">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Result Modal -->
+    <div id="aiResultModal" class="modal-backdrop" style="display: none;">
+        <div class="modal-content glass-panel">
+            <h3
+                style="font-size: 24px; font-weight: 800; color: #a5b4fc; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 2px;">
+                AI Simulation Report</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 20px; font-size: 15px; line-height: 1.5;">
+                The AI beam search solver completed up to 160 excavation clicks on today's board.
+            </p>
+            <div
+                style="display: flex; flex-direction: column; gap: 15px; width: 100%; margin-bottom: 25px; align-items: center;">
+                <div style="display: flex; gap: 40px; justify-content: center; align-items: center; width: 100%;">
+                    <div class="stat-box" style="align-items: center;">
+                        <span class="stat-label">AI Score</span>
+                        <span id="aiScoreEnd" class="stat-value" style="font-size: 26px; color: #a5b4fc;">$0.00</span>
+                    </div>
+                    <div class="hud-divider"></div>
+                    <div class="stat-box" style="align-items: center;">
+                        <span class="stat-label">Your Score</span>
+                        <span id="userBestScoreEnd" class="stat-value"
+                            style="font-size: 26px; color: var(--text-primary);">$0.00</span>
+                    </div>
+                </div>
+                <div
+                    style="display: flex; gap: 48px; justify-content: center; align-items: center; width: 100%; border-top: 1px solid rgba(255, 255, 255, 0.06); padding-top: 15px;">
+                    <div class="stat-box" style="align-items: center;">
+                        <span class="stat-label">AI Project IRR</span>
+                        <span id="aiIrrEnd" class="stat-value" style="font-size: 22px; color: #a5b4fc;">0.0%</span>
+                    </div>
+                    <div class="hud-divider"></div>
+                    <div class="stat-box" style="align-items: center;">
+                        <span class="stat-label">Your IRR</span>
+                        <span id="userIrrEnd" class="stat-value"
+                            style="font-size: 22px; color: var(--text-primary);">0.0%</span>
+                    </div>
+                </div>
+            </div>
+            <p id="aiComparisonText"
+                style="color: var(--accent-color); font-weight: 600; font-size: 16px; margin-bottom: 25px; font-family: 'Share Tech Mono', monospace; letter-spacing: 0.5px;">
+            </p>
+            <div style="display: flex; justify-content: center; width: 100%;">
+                <button id="closeAiModalBtn" class="btn"
+                    style="font-size: 15px; padding: 12px 24px; background: rgba(255, 255, 255, 0.08); color: white; box-shadow: none; border: 1px solid rgba(255, 255, 255, 0.1);">Back
+                    to Standings</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast-notification">Report copied to clipboard! ⛏️</div>
+
+    <!-- Footer -->
+    <footer
+        style="margin-top: auto; padding: 30px 10px 15px 10px; width: 100%; display: flex; justify-content: center; align-items: center; z-index: 10;">
+        <span id="footerFeedbackLink"
+            style="color: var(--text-secondary); font-size: 14px; cursor: pointer; transition: color 0.3s ease; border-bottom: 1px dotted var(--text-secondary);"
+            onmouseover="this.style.color='var(--accent-color)'; this.style.borderBottomColor='var(--accent-color)'"
+            onmouseout="this.style.color='var(--text-secondary)'; this.style.borderBottomColor='var(--text-secondary)'">Get
+            in touch with MineCrawl</span>
+    </footer>
+
+    <!-- Hidden Netlify feedback form crawler -->
+    <form name="feedback-form" data-netlify="true" method="POST" hidden>
+        <input type="text" name="name" />
+        <input type="email" name="email" />
+        <textarea name="message"></textarea>
+    </form>
+
+    <!-- Feedback Modal -->
+    <div id="feedbackModal" class="modal-backdrop" style="display: none;">
+        <div class="modal-content glass-panel" style="max-width: 480px; width: 90%; padding: 35px;">
+            <h3
+                style="font-size: 24px; font-weight: 800; color: var(--accent-color); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 2px; text-align: center;">
+                Get in touch</h3>
+            <p
+                style="color: var(--text-secondary); margin-bottom: 24px; font-size: 15px; line-height: 1.5; text-align: center;">
+                We would love to hear your feedback, bug reports or suggestions!</p>
+
+            <div style="width: 100%; display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px;">
+                <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 6px;">
+                    <label for="feedbackName"
+                        style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); font-weight: 600;">Name
+                        *</label>
+                    <input type="text" id="feedbackName" class="input-field" placeholder="Enter your name"
+                        style="width: 100%; text-align: left; padding: 12px 16px; font-size: 16px;" required>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 6px;">
+                    <label for="feedbackEmail"
+                        style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); font-weight: 600;">Email
+                        *</label>
+                    <input type="email" id="feedbackEmail" class="input-field" placeholder="Enter your email"
+                        style="width: 100%; text-align: left; padding: 12px 16px; font-size: 16px;" required>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 6px;">
+                    <label for="feedbackMessage"
+                        style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); font-weight: 600;">Message
+                        *</label>
+                    <textarea id="feedbackMessage" class="input-field" placeholder="Write your message here..."
+                        style="width: 100%; height: 120px; resize: none; text-align: left; padding: 12px 16px; font-size: 16px; line-height: 1.5;"
+                        required></textarea>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 15px; justify-content: center; width: 100%; flex-wrap: wrap;">
+                <button id="submitFeedbackBtn" class="btn"
+                    style="font-size: 15px; padding: 12px 28px; background: var(--gold-grad); color: #020617; flex: 1; min-width: 120px;">Submit</button>
+                <button id="closeFeedbackBtn" class="btn"
+                    style="font-size: 15px; padding: 12px 28px; background: rgba(255, 255, 255, 0.08); color: white; box-shadow: none; border: 1px solid rgba(255, 255, 255, 0.1); flex: 1; min-width: 120px;">Close</button>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- Include the JavaScript file -->
+    <script src="game.js?v=14"></script>
+</body>
+
+</html>
